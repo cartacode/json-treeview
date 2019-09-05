@@ -1,0 +1,10 @@
+*.pyo
+*.pyc
+*~
+docs/todo.txt
+docs/_build/
+docs/_build_html/
+docs/_build_html/.doctrees/environment.pickle
+media
+*.pdf
+*.gv
