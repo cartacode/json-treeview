@@ -6,12 +6,8 @@ import json
 import sys
 import os
 import copy
-from graphviz import Digraph
 import tkinter as Tkinter
 import tkinter.ttk as ttk
-from tkinter import Frame
-from treelib import Node, Tree
-import pdb
 
 
 class Node:
