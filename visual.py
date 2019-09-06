@@ -9,6 +9,7 @@ import copy
 from graphviz import Digraph
 import tkinter as Tkinter
 import tkinter.ttk as ttk
+from tkinter import Frame
 from treelib import Node, Tree
 import pdb
 
@@ -28,10 +29,20 @@ class TreeView(Tkinter.Frame):
         '''
         Tkinter.Frame.__init__(self, parent)
         self.parent=parent
-        self.item_counts = 0
         self.headers = []
         self.idx = 1 # index number of node
         self.node_hash = {}
+        pad = 1
+
+        self._geom='450x180+300+300'
+        parent.geometry("{0}x{1}+300+300".format(
+            parent.winfo_screenwidth()-pad, parent.winfo_screenheight()-pad))
+        parent.bind('<Escape>',self.toggle_geom)
+    
+    def toggle_geom(self,event):
+        geom=self.parent.winfo_geometry()
+        self.parent.geometry(self._geom)
+        self._geom=geom
 
     """
         creates a json view from excel file
@@ -77,7 +88,7 @@ class TreeView(Tkinter.Frame):
             set_value_obj = ()
             for key_of_obj in item['info']:
                 set_value_obj = set_value_obj + (item['info'][key_of_obj],)
-            print("@@@@@@@@@@@@@@@@@@@@: ", item['parent'], item['idx'], "****", item)
+
             self.insert_data(item['parent'], item['node_type'], item['idx'], item['text'], set_value_obj)
 
     def treeify(self, elements, idAttr='id', parentAttr='parent', childrenAttr='children'):
@@ -120,27 +131,24 @@ class TreeView(Tkinter.Frame):
         """Draw a user interface allowing the user to type
         items and insert them into the treeview
         """
-        self.parent.title("Canvas Test")
+        self.parent.title("Verticalized")
         self.parent.grid_rowconfigure(0, weight=1)
         self.parent.grid_columnconfigure(0, weight=1)
         self.parent.config(background="lavender")
 
         # Set the treeview
-        self.tree = ttk.Treeview(self.parent)
-        print('initialize view: ', self.headers)
+        self.tree = ttk.Treeview(self.parent, height=600, style="mystyle.Treeview")
 
         self.tree["columns"]=(self.headers)
         for i, header in enumerate(self.headers):
             self.tree.column('#{}'.format(str(i)), stretch=Tkinter.YES)
 
         for i, header in enumerate(self.headers, start=1):
-            print('#{}'.format(str(i)), header)
             self.tree.heading('#{}'.format(str(i)), text=header)
 
-        self.tree.grid(row=len(self.headers)+1, columnspan=4, sticky='nsew')
+        self.tree.grid(row=1000, columnspan=4, sticky='ns')
+        self.tree.pack(fill='both')
         self.treeview = self.tree
-        # Initialize the counter
-        self.item_counts = 0
 
     def insert_data(self, target="", node_type="end", idx=1, text="item", set_value_obj=None):
         """
@@ -149,7 +157,6 @@ class TreeView(Tkinter.Frame):
         self.treeview.insert(target, node_type, idx, text=text,
                              values=set_value_obj)
         # Increment counter
-        self.item_counts = self.item_counts + 1
 
 if __name__ == "__main__":
     folder_path = os.getcwd() + '/inputs' # path where the xlsx files are
