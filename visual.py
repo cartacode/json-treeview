@@ -8,12 +8,8 @@ import os
 import copy
 import tkinter as Tkinter
 import tkinter.ttk as ttk
+from PIL import Image, ImageTk
 
-
-class Node:
-    def __init__(self, name, obj=None):
-        self.name = name
-        self.obj = obj
 
 class TreeView(Tkinter.Frame):
     '''
@@ -22,14 +18,17 @@ class TreeView(Tkinter.Frame):
     def __init__(self, parent):
         '''
         Constructor
+        @params: parent: Tkinter instance
         '''
         Tkinter.Frame.__init__(self, parent)
         self.parent=parent
         self.headers = []
         self.idx = 1 # index number of node
         self.node_hash = {}
+
         pad = 1
 
+        # Adjust the screen to fit the window
         self._geom='450x180+300+300'
         parent.geometry("{0}x{1}+300+300".format(
             parent.winfo_screenwidth()-pad, parent.winfo_screenheight()-pad))
@@ -70,16 +69,48 @@ class TreeView(Tkinter.Frame):
 
         return excel_data
 
+    def get_data_from_csv(self, filename):
+        df_csv = pd.read_csv(filename)
+        row_counts = len(df_csv)
+        excel_data = []
+
+        for column in df_csv.columns:
+            self.headers.append(column)
+        
+        sheet_detail = { 'sheet_name': 'csv' }
+        sheet_content = []
+        for idx in range(0, row_counts):
+            row_data = {}
+            for row_name in df_csv.columns:
+                if row_name == "parent":
+                    try:
+                        row_data[row_name] = str(int(df_csv[row_name][idx]))
+                    except:
+                        row_data[row_name] = None
+                else:
+                    row_data[row_name] = str(df_csv[row_name][idx])
+            sheet_content.append(row_data)
+        sheet_detail['sheet_content'] = sheet_content
+        excel_data.append(sheet_detail)
+        return excel_data
+
     # Create your views here.
-    def get_treeview(self, filename):
-        excel_data = self.get_data_from_excel(filename)
+    def get_treeview(self, filename, extension):
+        if extension == '.csv':
+            excel_data = self.get_data_from_csv(filename)
+        else:
+            excel_data = self.get_data_from_excel(filename)
+
+        # initialize the tkinter treeview
         self.initialize_user_interface()
 
         for item in excel_data:
             iteritems = item['sheet_content']
             items_tree = self.treeify(iteritems)
-        
+
+        # create root element        
         self.insert_data("", 0, 0, "treeview", ())
+
         for item in self.node_hash.values():
             set_value_obj = ()
             for key_of_obj in item['info']:
@@ -106,6 +137,7 @@ class TreeView(Tkinter.Frame):
 
             info = copy.deepcopy(element)
             del info['children']
+
             self.node_hash[element[idAttr]] = {
                 'idx': self.idx,
                 'parent': parent_idx,
@@ -113,7 +145,6 @@ class TreeView(Tkinter.Frame):
                 'text': element['keyword singular de'],
                 'info': info
             }
-
             self.idx = self.idx + 1
 
             if element[parentAttr] is not None:
@@ -151,16 +182,20 @@ class TreeView(Tkinter.Frame):
         Insertion method.
         """
         self.treeview.insert(target, node_type, idx, text=text,
-                             values=set_value_obj)
-        # Increment counter
+                                values=set_value_obj)
 
 if __name__ == "__main__":
-    folder_path = os.getcwd() + '/inputs' # path where the xlsx files are
-    file_name = os.path.join(folder_path, 'input.xlsx')
+    filename = input('Input filename: ')
+    folder_path = os.getcwd() + '/inputs/' # path where the xlsx files are
+    file_name = os.path.join(folder_path, filename)
+    extension = os.path.splitext(file_name)[1]
 
-    root = Tkinter.Tk()
-    root.title("JSON TreeView")
-    tree = TreeView(root)
-    tree.get_treeview(file_name)
-    root.mainloop()
+    if extension.lower() == '.csv' or extension.lower() == '.xlsx':
+        root = Tkinter.Tk()
+        root.title("JSON TreeView")
+        tree = TreeView(root)
+        tree.get_treeview(file_name, extension)
+        root.mainloop()
+    else:
+        raise Exception("Please input valid csv file or xlsx file")
 
