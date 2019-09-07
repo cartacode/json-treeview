@@ -8,3 +8,6 @@ docs/_build_html/.doctrees/environment.pickle
 media
 *.pdf
 *.gv
+*.png
+*.jpg
+/inputs/
